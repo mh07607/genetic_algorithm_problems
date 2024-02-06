@@ -23,6 +23,9 @@ class EvolutionaryAlgorithm():
     self.mutation_operator: FunctionType = mutation_operator
     self.cross_over_function: FunctionType = cross_over_function
 
+  def run_generation():
+    pass
+
   def run(self, num_generations=4000, num_iterations=10):
     for j in range(num_iterations):
       for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
@@ -38,6 +41,7 @@ class EvolutionaryAlgorithm():
           self.population.extend([offspring1, offspring2])
         #-------------------------#
 
-        self.population = self.survivor_selection_function(self.population, self.population_size)
-        if(i % 10 == 0):
+        _, _, self.population = self.survivor_selection_function(self.population, self.population_size)
+        if(i % 100 == 0):
           print("Average fitness: ", average_fitness, ", Best value: ", 1/best_individual.fitness)
+          best_individual.save("data/fake_monalisa/fake_monalisa_"+str(j)+"_"+str(i)+".png")

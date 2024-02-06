@@ -75,19 +75,21 @@ def fitness_proportional_selection(population: list, num_selections: int):
 
   total_fitness = cumulative_fitness
   average_fitness = total_fitness/len(population)
-  parents = []
+  selections = []
   for i in range(num_selections):
     random_float = random.uniform(0, total_fitness)
     for i in population_proportions:
       #as soon as we find the first parent whose proportion starts after the random float, we append the parent before it to parents
-      if(population_proportions[i] > random_float):
-        parents.append(population[population.index(i)-1])
-  return best_individual, average_fitness, parents
+      if(population_proportions[i] >= random_float):
+        selections.append(i)
+  return best_individual, average_fitness, selections
 
 
 def tournament_selection(population: list, num_selections :int):
     pass
 
+def rank_selection(population: list, num_selections :int):
+   pass
 
 def random_length_crossover(parent1: Individual, parent2: Individual) -> tuple:
     start = random.randint(1, int(194/2))
@@ -141,13 +143,20 @@ def random_selection(population: list, num_selections: int):
   for i in range(num_selections):
     random_int = random.randint(0, len(population)-1)
     survivors.append(population[random_int])
-  return survivors
+  return 0,0,survivors
+
+def truncation_selection(population, size):
+  result = []
+  result = copy.deepcopy(population)
+  result.sort(key=lambda k : k.fitness, reverse=True)
+  # print(result)
+  return result[0], 0, result[:size]
 
 
 tsp = EvolutionaryAlgorithm(
     fitness_function = inverse_distance,
     initial_population_function = random_intercity_paths,
-    parent_selection_function = fitness_proportional_selection,
+    parent_selection_function = truncation_selection,
     survivor_selection_function = random_selection,
     cross_over_function = random_length_crossover,
     mutation_operator = random_two_gene_swap,
