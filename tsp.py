@@ -1,8 +1,10 @@
 from types import FunctionType
+from typing import List
 import numpy as np
 import copy
 import random
-from evolutionary_algorithm import EvolutionaryAlgorithm
+from tqdm import tqdm
+from evolutionary_algorithm import Individual, EvolutionaryAlgorithm
 
 '''Fetching Data'''
 def read_and_convert_to_dict(file_path):
@@ -30,10 +32,8 @@ def read_and_convert_to_dict(file_path):
               continue
 
     return city_list, data_dict
-
 file_path = 'data/qa194.tsp'  # Replace with the path to your text file
 city_list, city_dict = read_and_convert_to_dict(file_path)
-
 
 
 
@@ -41,26 +41,36 @@ def get_distance(x: tuple, y: tuple):
   # x and y are two 2D points each not 2 coordinates of one 2D point.
   return ((x[0]-y[0])**2 + (x[1]-y[1])**2)**(1/2)
 
-def inverse_distance(individual):
+def distance(individual):
   distance = 0
   num_individuals = len(individual)
   for i in range(len(individual)):
     distance += get_distance(city_dict[individual[i]], city_dict[individual[(i+1) % num_individuals]])
-  return 1/distance
+  return distance
 
-class Individual():
+
+class TSP_Path(Individual):
   def __init__(self, genome):
-    self.genome = genome
-    self.fitness = inverse_distance(self.genome)
+    fitness = distance(genome)
+    super().__init__(genome, fitness)
+  
+  def mutate(self) -> None:
+    # mutation defined by reversing orders for now and to be changed
+    # porposed algorithm would be to randomly swich 10 neighboring places such that it's neighbors have less distance as compared with the one
+    rand_index1 = random.randint(0, len(self.genome)-1)
+    rand_index2 = random.randint(0, len(self.genome)-1)
+
+    self.genome[rand_index1], self.genome[rand_index2] = self.genome[rand_index2], self.genome[rand_index1]
 
 
-def random_intercity_paths(population_size: int):
+def random_intercity_paths(population_size: int) -> List[TSP_Path]:
   population = []
   for i in range(population_size):
     genome = copy.deepcopy(city_list)
     np.random.shuffle(genome)
-    population.append(Individual(genome))
+    population.append(TSP_Path(genome))
   return population
+
 
 
 def fitness_proportional_selection(population: list, num_selections: int):
@@ -85,13 +95,7 @@ def fitness_proportional_selection(population: list, num_selections: int):
   return best_individual, average_fitness, selections
 
 
-def tournament_selection(population: list, num_selections :int):
-    pass
-
-def rank_selection(population: list, num_selections :int):
-   pass
-
-def random_length_crossover(parent1: Individual, parent2: Individual) -> tuple:
+def TSP_random_length_crossover(parent1: TSP_Path, parent2: TSP_Path):
     start = random.randint(1, int(194/2))
     end = random.randint(int(194/2), 192)
 
@@ -119,49 +123,32 @@ def random_length_crossover(parent1: Individual, parent2: Individual) -> tuple:
             pointer += 1
         parent1_pointer = (parent1_pointer + 1) % len(parent1.genome)
 
-    offspring1 = Individual(offspring1)
-    offspring2 = Individual(offspring2)
+    offspring1 = TSP_Path(offspring1)
+    offspring2 = TSP_Path(offspring2)
 
     return offspring1, offspring2
 
 
-def random_two_gene_swap(individual :Individual, mutation_rate: float):
-  rand_numb = random.randint(0,100)/100
-  if rand_numb <= mutation_rate:
-      # mutation defined by reversing orders for now and to be changed
-      # porposed algorithm would be to randomly swich 10 neighboring places such that it's neighbors have less distance as compared with the one
-      rand_index1 = random.randint(0, len(individual.genome)-1)
-      rand_index2 = random.randint(0, len(individual.genome)-1)
+class TSP_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
+   def run(self, num_iterations: int=10, num_generations: int=10000):
+      for j in range(num_iterations):
+        for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
+          self.run_generation()
+          if(i % 100 == 0):
+            best_individual, average_fitness = self.get_average_and_best_individual()
+            print("Average fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
 
-      individual.genome[rand_index1], individual.genome[rand_index2] = individual.genome[rand_index2], individual.genome[rand_index1]
-
-  return Individual(individual.genome)
-
-
-def random_selection(population: list, num_selections: int):
-  survivors = []
-  for i in range(num_selections):
-    random_int = random.randint(0, len(population)-1)
-    survivors.append(population[random_int])
-  return 0,0,survivors
-
-def truncation_selection(population, size):
-  result = []
-  result = copy.deepcopy(population)
-  result.sort(key=lambda k : k.fitness, reverse=True)
-  # print(result)
-  return result[0], 0, result[:size]
+        self.population = self.inital_population_function()
 
 
-tsp = EvolutionaryAlgorithm(
-    fitness_function = inverse_distance,
+tsp = TSP_EvolutionaryAlgorithm(
     initial_population_function = random_intercity_paths,
-    parent_selection_function = truncation_selection,
-    survivor_selection_function = random_selection,
-    cross_over_function = random_length_crossover,
-    mutation_operator = random_two_gene_swap,
+    parent_selection_function = 'binary',
+    survivor_selection_function = 'truncation',
+    cross_over_function = TSP_random_length_crossover,
     population_size = 100,
-    mutation_rate = 0.5
+    mutation_rate = 0.5,
+    num_offsprings=10
 )
 
 tsp.run()
