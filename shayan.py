@@ -1,3 +1,41 @@
+city_list = []
+city_dict = {}
+
+def read_and_convert_to_dict(file_path):
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            # Split the line into parts
+            parts = line.strip().split()
+
+            # Extract key and coordinates
+            key = int(parts[0])
+
+            # adding the city to the list as well to keep record
+            city_list.append(key)
+
+            coordinates = tuple(map(float, parts[1:]))
+
+            # Create dictionary entry
+            city_dict[key] = coordinates
+
+    return city_dict
+
+# Example usage:
+file_path = 'data.txt'  # Replace with the path to your text file
+result_dict = read_and_convert_to_dict(file_path)
+
+# Print the result
+# print(result_dict)
+print(city_list)
+
+
+
+# # making the function to make seleciton
+
+
+# city_list = []
+# city_dict = {}
 
 
 from types import FunctionType
@@ -177,63 +215,76 @@ class EvolAlgo():
     
     # fitness propotional to be changed according actual implementation
 
-    def fitness_selection(self, size):
-        fitness = []
-        total_fitness = self.total_fitness()
-        # print(total_fitness)
+    # def fitness_selection(self, size):
+    #     fitness = []
+    #     total_fitness = self.total_fitness()
+    #     # print(total_fitness)
 
-        # fitness_prob = []  
-        normalized_range =[]
-        result = []
+    #     # fitness_prob = []  
+    #     normalized_range =[]
+    #     result = []
 
-        for i in self.population:
-            fitness.append(i.get_distance())
+    #     for i in self.population:
+    #         fitness.append(i.get_distance())
         
-        normalized_range.append(fitness[0]/total_fitness)
+    #     normalized_range.append(fitness[0]/total_fitness)
 
-        for i in range(1,len(fitness)):
-            normalized_value = fitness[i]/total_fitness
-            normalized_range.append(normalized_range[i-1] + normalized_value)
+    #     for i in range(1,len(fitness)):
+    #         normalized_value = fitness[i]/total_fitness
+    #         normalized_range.append(normalized_range[i-1] + normalized_value)
 
-        for i in range(size):
-            random_numb = random.random()
+    #     for i in range(size):
+    #         random_numb = random.random()
 
-            for i in range(len(normalized_range)):
-                if random_numb < i:
-                    result.append(self.population[i])
-                    break
+    #         for i in range(len(normalized_range)):
+    #             if random_numb < i:
+    #                 result.append(self.population[i])
+    #                 break
 
-        # print(normalized_range)
-        return result
+    #     # print(normalized_range)
+    #     return result
+    def fitness_proportional_selection(self,size):
+        total_fitness = sum(chromo.distance for chromo in self.population)
+        selection_probs = [chromo.distance / total_fitness for chromo in self.population]
+        selected_indices = np.random.choice(range(self.population_size), size=self.population_size, replace=True, p=selection_probs)
+        return [self.population[i] for i in selected_indices[:size]]
 
+    
+    # def rank_selection(self, size):
+    #     rank = sorted(self.population, key=lambda x: x.get_distance())
+    #     total_rank = (len(rank) * (len(rank)  + 1)) / 2
+    #     # total_rank  = (10*11)/2
+    #     # print(total)
+    #     # fitness_prob = []  
+    #     normalized_range =[]
+    #     result = []
+        
+    #     normalized_range.append(1/total_rank)
+
+    #     for i in range(1,len(rank)):
+    #         normalized_value = (i+1)/total_rank
+    #         # print(rank[i].get_distance(), end = ', ')
+    #         # print()
+    #         normalized_range.append(normalized_range[i-1] + normalized_value)
+        
+
+    #     for i in range(size):
+    #         random_numb = random.random()
+
+    #         for i in range(len(normalized_range)):
+    #             if random_numb < i:
+    #                 result.append(rank[i])
+    #                 break
+        
+    #     # print(normalized_range)
+    #     return result
     def rank_selection(self, size):
-        rank = sorted(self.population, key=lambda x: x.get_distance())
-        total_rank = (len(rank) * (len(rank)  + 1)) / 2
-        # total_rank  = (10*11)/2
-        # print(total)
-        # fitness_prob = []  
-        normalized_range =[]
-        result = []
-        
-        normalized_range.append(1/total_rank)
-
-        for i in range(1,len(rank)):
-            normalized_value = (i+1)/total_rank
-            # print(rank[i].get_distance(), end = ', ')
-            # print()
-            normalized_range.append(normalized_range[i-1] + normalized_value)
-        
-
-        for i in range(size):
-            random_numb = random.random()
-
-            for i in range(len(normalized_range)):
-                if random_numb < i:
-                    result.append(rank[i])
-                    break
-        
-        # print(normalized_range)
-        return result
+        self.population.sort(key=lambda chromo: chromo.distance)
+        ranks = np.arange(1, self.population_size + 1)
+        total_rank = np.sum(ranks)
+        selection_probs = ranks / total_rank
+        selected_indices = np.random.choice(range(self.population_size), size=self.population_size, replace=True, p=selection_probs)
+        return [self.population[i] for i in selected_indices[:size]]
 
 
     def run_generation(self,parent_sel, survivor_sel, popul, offsp, mr, num_gen):
@@ -266,6 +317,7 @@ class EvolAlgo():
                 self.population = self.truncation_selection(popul)
 
             print("the best fit for the ", i, " generation is: ", self.best_fitness())
+        
 
         
 myalgo = EvolAlgo(300)
@@ -275,4 +327,4 @@ a = (myalgo.population[0])
 
 # result = myalgo.binary_tournament_selection()
 
-myalgo.run_generation(5,5,300,150,0.8,500)
+myalgo.run_generation(4,2,300,150,0.8,10000)
