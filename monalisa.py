@@ -9,6 +9,7 @@ from evolutionary_algorithm import Individual, EvolutionaryAlgorithm
 
 # Set up the screen
 width, height = 1200, 1200
+polygons_per_image = 50
 
 # Load the reference image
 reference_image = np.array(Image.open('data/monalisa.png').convert('RGBA'))
@@ -29,16 +30,18 @@ def generate_random_polygon():
     num_vertices = np.random.randint(3, 7)  # Random number of vertices (3 to 6)
     vertices = [(np.random.randint(0, width), np.random.randint(0, height)) for _ in range(num_vertices)]
     # color = color_pallete[np.random.randint(0, 5)]  # Random RGB color
-    color = (np.random.randint(0,255), np.random.randint(0,255), np.random.randint(0,255), np.random.randint(0,255))  # Random RGB color
+    color = (np.random.randint(0,255), np.random.randint(0,255), np.random.randint(0,255), np.random.randint(10,60))  # Random RGB color
     return {'vertices': vertices, 'color': color}
 
 
 def image_difference(genome):
     image = Image.new("RGBA", (width, height), color=(0, 0, 0))
-    draw = ImageDraw.Draw(image)
+    overlay = Image.new("RGBA", (width, height), color=(0, 0, 0, 0))
     # Draw each polygon
     for polygon in genome:
+        draw = ImageDraw.Draw(overlay)
         draw_polygon(draw, polygon['color'], polygon['vertices'])
+        image = Image.alpha_composite(image, overlay)
     # Capture the current screen as an image
     # Calculate the absolute pixel-wise difference
     diff = np.abs(reference_image - np.array(image))
@@ -61,17 +64,19 @@ class PolygonImage(Individual):
             self.genome[rand_index1]['vertices'][rand_coordinate], self.genome[rand_index2]['vertices'][rand_coordinate] = self.genome[rand_index2]['vertices'][rand_coordinate], self.genome[rand_index1]['vertices'][rand_coordinate]
         else:
         # individual.genome[rand_index1]['color'], individual.genome[rand_index2]['color'] = individual.genome[rand_index2]['color'], individual.genome[rand_index1]['color']
-            color1 = (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0,255))
-            color2 = (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0,255))
+            color1 = (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(10,60))
+            color2 = (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(10,60))
             self.genome[rand_index1]['color'], self.genome[rand_index2]['color'] = color1, color2
 
 
     def save(self, image_name):
         image = Image.new("RGBA", (width, height), color=(0,0,0))
-        draw = ImageDraw.Draw(image)
+        overlay = Image.new("RGBA", (width, height), color=(0, 0, 0, 0))
         # Draw each polygon
         for polygon in self.genome:
+            draw = ImageDraw.Draw(overlay)
             draw_polygon(draw, polygon['color'], polygon['vertices'])
+            image = Image.alpha_composite(image, overlay)
         
         image.save(image_name)
 
@@ -79,17 +84,19 @@ class PolygonImage(Individual):
 def random_polygon_combinations(population_size: int) -> List[PolygonImage]:
     population = []
     for i in range(population_size):
-        genome = [generate_random_polygon() for _ in range(100)]
+        genome = [generate_random_polygon() for _ in range(polygons_per_image)]
         population.append(PolygonImage(genome))
     return population
 
 
 def random_length_crossover(parent1: Individual, parent2: Individual) -> tuple:
-    start = random.randint(0, int(100/2))
-    end = random.randint(int(100/2), 98)
+    length = len(parent1.genome)
+    
+    start = random.randint(0, int(length-3))
+    end = random.randint(start, int(length-2))
 
-    offspring1 = [None] * 100
-    offspring2 = [None] * 100
+    offspring1 = [None] * length
+    offspring2 = [None] * length
 
     offspring1[start:end+1] = parent1.genome[start:end+1]
     offspring2[start:end+1] = parent2.genome[start:end+1]
@@ -100,7 +107,7 @@ def random_length_crossover(parent1: Individual, parent2: Individual) -> tuple:
 
     while None in offspring1:
         #if parent2.genome[parent2_pointer] not in offspring1:
-        offspring1[pointer % 100] = parent2.genome[parent2_pointer]
+        offspring1[pointer % length] = parent2.genome[parent2_pointer]
         pointer += 1
         parent2_pointer = (parent2_pointer + 1) % len(parent2.genome)
 
@@ -123,12 +130,12 @@ class MonaLisa_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
       for j in range(num_iterations):
         for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
           self.run_generation()
-          if(i % 500 == 0):
+          if(i % 100 == 0):
             best_individual, average_fitness = self.get_average_and_best_individual()
             print("Average fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
             best_individual.save("fake_monalisa_"+str(j)+"_"+str(i)+".png")
 
-        self.population = self.inital_population_function()
+        self.population = self.initial_population_function()
         
 
 monalisa = MonaLisa_EvolutionaryAlgorithm(
