@@ -6,6 +6,7 @@ import copy
 import random
 from tqdm import tqdm
 from evolutionary_algorithm import Individual, EvolutionaryAlgorithm
+import math
 
 # Set up the screen
 width, height = 1200, 1200
@@ -41,28 +42,35 @@ def image_difference(genome):
     image_difference = np.mean(diff)
     return image_difference
 
+def clamp(value, minimum, maximum):
+    return max(minimum, min(value, maximum))
 
 class PolygonImage(Individual):
     def __init__(self, genome):
         fitness = image_difference(genome)
         super().__init__(genome, fitness)
+
+
         self.mutation_rates = {"add_polygon": 0.125,
-                               "remove_polygon": 0.125,
+                               "remove_polygon": 0.0625,
                                "move_polygon": 0.125,
-                               "add_point": 0.05,
-                               "remove_point": 0.05,
-                               "large_point_change": 0.05,
-                               "medium_point_change": 0.05,
-                               "small_point_change": 0.05,
-                               "mutate_red": 0.05,
-                               "mutate_green": 0.05,
-                               "mutate_blue": 0.05,
-                               "mutate_alpha": 0.05}
-        
+                               "add_point": 0.0625,
+                               "remove_point": 0.0625,
+                               "large_point_change": 0.0625,
+                               "medium_point_change": 0.0625,
+                               "small_point_change": 0.0625,
+                               "mutate_red": 0.0625,
+                               "mutate_green": 0.0625,
+                               "mutate_blue": 0.0625,
+                               "mutate_alpha": 0.0625}
         self.min_points_per_polygon = 3
         self.max_points_per_polygon = 10
-        self.mutation_ranges = {"min_points_per_polygon": 3,
-                                "max_points_per_polygon": 10}
+        self.mutation_ranges = {
+                                "min_points_per_polygon": 3,
+                                "max_points_per_polygon": 10,
+                                "medium_point_change": 20,
+                                "small_point_change": 3,
+                                }
     
     def add_polygon(self) -> None:
         if(len(self.genome) < max_polygons_per_image):
@@ -101,8 +109,33 @@ class PolygonImage(Individual):
         del vertices[index]
         return vertices
 
-    def mutate_color(self, polygon) -> tuple:
-        pass
+
+    def mutate_color(self, color) -> tuple:
+        color = list(color)
+        if(np.random.uniform() <= self.mutation_rates["mutate_red"]):
+            color[0] = random.randint(0, 255)
+        if(np.random.uniform() <= self.mutation_rates["mutate_red"]):
+            color[1] = random.randint(0, 255)
+        if(np.random.uniform() <= self.mutation_rates["mutate_red"]):
+            color[2] = random.randint(0, 255)
+        if(np.random.uniform() <= self.mutation_rates["mutate_red"]):
+            color[3] = random.randint(10, 60)
+        return tuple(color)
+        
+
+    def mutate_points(self, vertices) -> list:
+        for i in range(len(vertices)):
+            if(np.random.uniform() <= self.mutation_rates["large_point_change"]):
+                vertices[i] = (random.randint(0, width), random.randint(0, height))
+            if(np.random.uniform() <= self.mutation_rates["medium_point_change"]):
+                x = clamp(vertices[i][0] + np.random.uniform(self.mutation_ranges["medium_point_change"]), 0, width)
+                y = clamp(vertices[i][1] + np.random.uniform(self.mutation_ranges["medium_point_change"]), 0, height)
+                vertices[i] = (x, y)
+            if(np.random.uniform() <= self.mutation_rates["small_point_change"]):
+                x = clamp(vertices[i][0] + np.random.uniform(self.mutation_ranges["small_point_change"]), 0, width)
+                y = clamp(vertices[i][1] + np.random.uniform(self.mutation_ranges["small_point_change"]), 0, height)
+                vertices[i] = (x, y)
+
 
     def mutate_polygons(self) -> None:
         for i in range(len(self.genome)):
@@ -110,6 +143,9 @@ class PolygonImage(Individual):
                 self.genome[i]["vertices"] = self.add_point(self.genome[i]["vertices"])
             if(np.random.uniform() <= self.mutation_rates["remove_point"]):
                 self.genome[i]["vertices"] = self.remove_point(self.genome[i]["vertices"])
+
+            self.genome[i]["color"] = self.mutate_color(self.genome[i]["color"])
+            self.genome[i]["vertices"] = self.mutate_points(self.genome[i]["vertices"])
 
 
 
@@ -147,14 +183,15 @@ def random_polygon_combinations(population_size: int) -> List[PolygonImage]:
 
 def random_length_crossover(parent1: PolygonImage, parent2: PolygonImage) -> tuple:
     length1 = len(parent1.genome)
-    length2 = len(parent1.genome)
-    length = max(length1, length2)
+    length2 = len(parent2.genome)
+    max_length = max(length1, length2)
+    min_length = min(length1, length2)
 
-    start = random.randint(0, int(length-3))
-    end = random.randint(start, int(length-2))
+    start = random.randint(0, int(min_length-3))
+    end = random.randint(start, int(min_length-2))
 
-    offspring1 = [None] * length
-    offspring2 = [None] * length
+    offspring1 = [None] * max_length
+    offspring2 = [None] * max_length
 
     offspring1[start:end+1] = parent1.genome[start:end+1]
     offspring2[start:end+1] = parent2.genome[start:end+1]
@@ -165,17 +202,17 @@ def random_length_crossover(parent1: PolygonImage, parent2: PolygonImage) -> tup
 
     while None in offspring1:
         #if parent2.genome[parent2_pointer] not in offspring1:
-        offspring1[pointer % length] = parent2.genome[parent2_pointer]
+        offspring1[pointer % max_length] = parent2.genome[parent2_pointer]
         pointer += 1
-        parent2_pointer = (parent2_pointer + 1) % length
+        parent2_pointer = (parent2_pointer + 1) % length2
 
     pointer = 0
 
     while None in offspring2:
         #if parent1.genome[parent1_pointer] not in offspring2:
-        offspring2[pointer] = parent1.genome[parent1_pointer]
+        offspring2[pointer % max_length] = parent1.genome[parent1_pointer]
         pointer += 1
-        parent1_pointer = (parent1_pointer + 1) % length
+        parent1_pointer = (parent1_pointer + 1) % length1
 
     offspring1 = PolygonImage(offspring1)
     offspring2 = PolygonImage(offspring2)
