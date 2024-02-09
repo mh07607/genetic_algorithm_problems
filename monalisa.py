@@ -133,11 +133,11 @@ class MonaLisa_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
 
 monalisa = MonaLisa_EvolutionaryAlgorithm(
     initial_population_function = random_polygon_combinations,
-    parent_selection_function = 'truncation',
-    survivor_selection_function = 'random',
+    parent_selection_function = 'rank',
+    survivor_selection_function = 'binary',
     cross_over_function = random_length_crossover,
     population_size = 100,
     mutation_rate = 0.5,
-    num_offsprings=50
+    num_offsprings=100
 )
 monalisa.run(num_generations=10000)

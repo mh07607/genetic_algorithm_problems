@@ -67,19 +67,19 @@ class EvolutionaryAlgorithm():
 
 
   def rank_selection(self, num_selections: int) -> List[Individual]:
-    self.population.sort(key=lambda individual: individual.fitness)
+    self.population.sort(key=lambda individual: individual.fitness, reverse=True)
     ranks = np.arange(1, self.population_size + 1)
     total_rank = np.sum(ranks)
     selection_probs = ranks / total_rank
-    selected_indices = np.random.choice(range(len(self.population)), size=len(self.population), replace=True, p=selection_probs)
-    return [self.population[i] for i in selected_indices[:num_selections]]
+    selected_indices = np.random.choice(range(len(self.population)), size=num_selections, replace=True, p=selection_probs)
+    return [self.population[i] for i in selected_indices]
   
 
   def fitness_proportional_selection(self, num_selections: int) -> List[Individual]:
-    total_fitness = sum(individual.fitness for individual in self.population)
-    selection_probs = [individual.fitness / total_fitness for individual in self.population]
-    selected_indices = np.random.choice(range(len(self.population)), size=len(self.population), replace=True, p=selection_probs)
-    return [self.population[i] for i in selected_indices[:num_selections]]
+    total_fitness = sum(1/individual.fitness for individual in self.population)
+    selection_probs = [(1/individual.fitness) / total_fitness for individual in self.population]
+    selected_indices = np.random.choice(range(len(self.population)), size=num_selections, replace=True, p=selection_probs)
+    return [self.population[i] for i in selected_indices]
 
 
   def get_average_and_best_individual(self) -> (Individual, float):

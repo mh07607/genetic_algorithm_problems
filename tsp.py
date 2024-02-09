@@ -66,29 +66,6 @@ def random_intercity_paths(population_size: int) -> List[TSP_Path]:
   return population
 
 
-
-# def fitness_proportional_selection(population: list, num_selections: int):
-#   population_proportions = {}
-#   cumulative_fitness = 0
-#   best_individual = population[0]
-#   for individual in population:
-#     if(individual.fitness > best_individual.fitness):
-#       best_individual = individual
-#     cumulative_fitness += individual.fitness
-#     population_proportions[individual] = cumulative_fitness
-
-#   total_fitness = cumulative_fitness
-#   average_fitness = total_fitness/len(population)
-#   selections = []
-#   for i in range(num_selections):
-#     random_float = random.uniform(0, total_fitness)
-#     for i in population_proportions:
-#       #as soon as we find the first parent whose proportion starts after the random float, we append the parent before it to parents
-#       if(population_proportions[i] >= random_float):
-#         selections.append(i)
-#   return best_individual, average_fitness, selections
-
-
 def TSP_random_length_crossover(parent1: TSP_Path, parent2: TSP_Path):
     start = random.randint(1, int(194/2))
     end = random.randint(int(194/2), 192)
@@ -137,11 +114,19 @@ class TSP_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
 
 tsp = TSP_EvolutionaryAlgorithm(
     initial_population_function = random_intercity_paths,
-    parent_selection_function = 'rank',
-    survivor_selection_function = 'truncation',
+    parent_selection_function = 'fitness',
+    survivor_selection_function = 'binary',
     cross_over_function = TSP_random_length_crossover,
     population_size = 100,
     mutation_rate = 0.5,
-    num_offsprings=10
+    num_offsprings=100
 )
-tsp.run(num_generations=20000)
+tsp.run(num_generations=10000)
+
+''' Generating Graphs '''
+selection_pairs = {('fitness', 'random'),
+                    ('binary', 'truncation'), 
+                    ('truncation', 'truncation'), 
+                    ('random', 'random'),
+                    ('fitness', 'rank'),
+                    ('rank', 'binary')}
