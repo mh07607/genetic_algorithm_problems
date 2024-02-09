@@ -93,7 +93,7 @@ class PolygonImage(Individual):
         self.genome[index1], self.genome[index2] = self.genome[index2], self.genome[index1]
 
     def add_point(self, vertices) -> List:
-        if(len(vertices > self.max_points_per_polygon)):
+        if(len(vertices) > self.max_points_per_polygon):
             return vertices
         index = random.randint(0, len(vertices)-2)
         prevX, prevY = vertices[index]
@@ -135,6 +135,8 @@ class PolygonImage(Individual):
                 x = clamp(vertices[i][0] + np.random.uniform(self.mutation_ranges["small_point_change"]), 0, width)
                 y = clamp(vertices[i][1] + np.random.uniform(self.mutation_ranges["small_point_change"]), 0, height)
                 vertices[i] = (x, y)
+                
+        return vertices
 
 
     def mutate_polygons(self) -> None:
