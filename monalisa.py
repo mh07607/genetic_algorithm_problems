@@ -51,18 +51,18 @@ class PolygonImage(Individual):
         super().__init__(genome, fitness)
 
 
-        self.mutation_rates = {"add_polygon": 0.125,
-                               "remove_polygon": 0.0625,
-                               "move_polygon": 0.125,
-                               "add_point": 0.0625,
-                               "remove_point": 0.0625,
-                               "large_point_change": 0.0625,
-                               "medium_point_change": 0.0625,
-                               "small_point_change": 0.0625,
-                               "mutate_red": 0.0625,
-                               "mutate_green": 0.0625,
-                               "mutate_blue": 0.0625,
-                               "mutate_alpha": 0.0625}
+        self.mutation_rates = {"add_polygon": 0.0015,
+                               "remove_polygon": 0.00067,
+                               "move_polygon": 0.0015,
+                               "add_point": 0.00067,
+                               "remove_point": 0.00067,
+                               "large_point_change": 0.00067,
+                               "medium_point_change": 0.00067,
+                               "small_point_change": 0.00067,
+                               "mutate_red": 0.00067,
+                               "mutate_green": 0.00067,
+                               "mutate_blue": 0.00067,
+                               "mutate_alpha": 0.00067}
         self.min_points_per_polygon = 3
         self.max_points_per_polygon = 10
         self.mutation_ranges = {
