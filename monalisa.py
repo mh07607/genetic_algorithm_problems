@@ -87,7 +87,7 @@ class PolygonImage(Individual):
     def add_point(self, vertices) -> List:
         if(len(vertices > self.max_points_per_polygon)):
             return vertices
-        index = random.randint(0, len(polygon["vertices"])-2)
+        index = random.randint(0, len(vertices)-2)
         prevX, prevY = vertices[index]
         nextX, nextY = vertices[index+1]
         newX, newY = (prevX+nextX)/2, (prevY+nextY)/2
@@ -95,11 +95,11 @@ class PolygonImage(Individual):
         return vertices
 
     def remove_point(self, vertices) -> List:
-        if(len(polygon["vertices"] < self.min_points_per_polygon)):
-            return polygon
-        index = random.randint(0, len(polygon["vertices"])-1)
-        del polygon["vertices"][index]
-        return polygon
+        if(len(vertices) < self.min_points_per_polygon):
+            return vertices
+        index = random.randint(0, len(vertices)-1)
+        del vertices[index]
+        return vertices
 
     def mutate_color(self, polygon) -> tuple:
         pass

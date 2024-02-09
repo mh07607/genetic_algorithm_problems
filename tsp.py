@@ -55,6 +55,7 @@ class TSP_Path(Individual):
     rand_index2 = random.randint(0, len(self.genome)-1)
 
     self.genome[rand_index1], self.genome[rand_index2] = self.genome[rand_index2], self.genome[rand_index1]
+    self.fitness = distance(self.genome)
 
 
 def random_intercity_paths(population_size: int) -> List[TSP_Path]:

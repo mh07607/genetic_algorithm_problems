@@ -48,6 +48,7 @@ class JobSchedule(Individual):
         rand_index2 = random.randint(0, len(self.genome)-1)
 
         self.genome[rand_index1], self.genome[rand_index2] = self.genome[rand_index2], self.genome[rand_index1]
+        self.fitness = calculate_schedule_time(self.genome)
 
 
 def random_job_steps(population_size: int) -> List(JobSchedule):
