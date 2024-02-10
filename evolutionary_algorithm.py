@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import random
 import copy
 import numpy as np
+import threading
 
 class Individual():
   def __init__(self, genome, fitness):
@@ -68,7 +69,7 @@ class EvolutionaryAlgorithm():
 
   def rank_selection(self, num_selections: int) -> List[Individual]:
     self.population.sort(key=lambda individual: individual.fitness, reverse=True)
-    ranks = np.arange(1, self.population_size + 1)
+    ranks = np.arange(1, len(self.population) + 1)
     total_rank = np.sum(ranks)
     selection_probs = ranks / total_rank
     selected_indices = np.random.choice(range(len(self.population)), size=num_selections, replace=True, p=selection_probs)
@@ -112,6 +113,38 @@ class EvolutionaryAlgorithm():
       if rand_num2 <= self.mutation_rate:
         offspring2.mutate()
       self.population.extend([offspring1, offspring2])
+
+    self.population = self.survivor_selection_function(self.population_size)
+
+
+  def process_offspring_range(self, start, end, parents, lock):
+    for k in range(start, end, 2):
+        offspring1, offspring2 = self.cross_over_function(parents[k], parents[k + 1])
+        rand_num1, rand_num2 = random.randint(0, 100) / 100, random.randint(0, 100) / 100
+        if rand_num1 <= self.mutation_rate:
+            offspring1.mutate()
+        if rand_num2 <= self.mutation_rate:
+            offspring2.mutate()
+        with lock:
+            self.population.extend([offspring1, offspring2])
+
+
+  def run_generation_threaded(self) -> None:
+    parents = self.parent_selection_function(self.num_offsprings)
+    threads = []
+    lock = threading.Lock()
+    num_threads = 4  # Number of threads you want to create
+    chunk_size = (self.num_offsprings - 1) // num_threads
+
+    for i in range(num_threads):
+        start = i * chunk_size
+        end = min((i + 1) * chunk_size, self.num_offsprings)
+        thread = threading.Thread(target=self.process_offspring_range, args=(start, end, parents, lock))
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
 
     self.population = self.survivor_selection_function(self.population_size)
         

@@ -135,7 +135,7 @@ class PolygonImage(Individual):
                 x = clamp(vertices[i][0] + np.random.uniform(self.mutation_ranges["small_point_change"]), 0, width)
                 y = clamp(vertices[i][1] + np.random.uniform(self.mutation_ranges["small_point_change"]), 0, height)
                 vertices[i] = (x, y)
-                
+
         return vertices
 
 
@@ -226,7 +226,7 @@ class MonaLisa_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
     def run(self, num_iterations: int=10, num_generations: int=10000):
       for j in range(num_iterations):
         for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
-          self.run_generation()
+          self.run_generation_threaded()
           if(i % 500 == 0):
             best_individual, average_fitness = self.get_average_and_best_individual()
             print("\nAverage fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
@@ -238,10 +238,10 @@ class MonaLisa_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
 monalisa = MonaLisa_EvolutionaryAlgorithm(
     initial_population_function = random_polygon_combinations,
     parent_selection_function = 'truncation',
-    survivor_selection_function = 'random',
+    survivor_selection_function = 'truncation',
     cross_over_function = random_length_crossover,
     population_size = 100,
     mutation_rate = 0.5,
-    num_offsprings=100
+    num_offsprings=50
 )
 monalisa.run(num_generations=10000)
