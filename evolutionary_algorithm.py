@@ -115,8 +115,7 @@ class EvolutionaryAlgorithm():
       self.population.extend([offspring1, offspring2])
 
     self.population = self.survivor_selection_function(self.population_size)
-
-
+  
   def process_offspring_range(self, start, end, parents, lock):
     for k in range(start, end, 2):
         offspring1, offspring2 = self.cross_over_function(parents[k], parents[k + 1])
@@ -133,7 +132,7 @@ class EvolutionaryAlgorithm():
     parents = self.parent_selection_function(self.num_offsprings)
     threads = []
     lock = threading.Lock()
-    num_threads = 4  # Number of threads you want to create
+    num_threads = 8  # Number of threads you want to create
     chunk_size = (self.num_offsprings - 1) // num_threads
 
     for i in range(num_threads):
@@ -147,7 +146,6 @@ class EvolutionaryAlgorithm():
         thread.join()
 
     self.population = self.survivor_selection_function(self.population_size)
-        
 
   @abstractmethod
   def run():

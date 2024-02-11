@@ -11,7 +11,7 @@ import math
 # Set up the screen
 width, height = 1200, 1200
 
-max_polygons_per_image = 50
+max_polygons_per_image = 100
 min_polygons_per_image = 5
 
 # Load the reference image
@@ -192,8 +192,8 @@ def random_length_crossover(parent1: PolygonImage, parent2: PolygonImage) -> tup
     start = random.randint(0, int(min_length-3))
     end = random.randint(start, int(min_length-2))
 
-    offspring1 = [None] * max_length
-    offspring2 = [None] * max_length
+    offspring1 = [None] * length1
+    offspring2 = [None] * length2
 
     offspring1[start:end+1] = parent1.genome[start:end+1]
     offspring2[start:end+1] = parent2.genome[start:end+1]
@@ -204,7 +204,7 @@ def random_length_crossover(parent1: PolygonImage, parent2: PolygonImage) -> tup
 
     while None in offspring1:
         #if parent2.genome[parent2_pointer] not in offspring1:
-        offspring1[pointer % max_length] = parent2.genome[parent2_pointer]
+        offspring1[pointer % length1] = parent2.genome[parent2_pointer]
         pointer += 1
         parent2_pointer = (parent2_pointer + 1) % length2
 
@@ -212,7 +212,7 @@ def random_length_crossover(parent1: PolygonImage, parent2: PolygonImage) -> tup
 
     while None in offspring2:
         #if parent1.genome[parent1_pointer] not in offspring2:
-        offspring2[pointer % max_length] = parent1.genome[parent1_pointer]
+        offspring2[pointer % length2] = parent1.genome[parent1_pointer]
         pointer += 1
         parent1_pointer = (parent1_pointer + 1) % length1
 
@@ -224,24 +224,23 @@ def random_length_crossover(parent1: PolygonImage, parent2: PolygonImage) -> tup
 
 class MonaLisa_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
     def run(self, num_iterations: int=10, num_generations: int=10000):
-      for j in range(num_iterations):
-        for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
+        for i in tqdm(range(num_generations), desc=''):
           self.run_generation_threaded()
-          if(i % 500 == 0):
+          if(i % 100 == 0):
             best_individual, average_fitness = self.get_average_and_best_individual()
             print("\nAverage fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
-            best_individual.save("data/fake_monalisa/fake_monalisa_"+str(j)+"_"+str(i)+".png")
+            best_individual.save("data/fake_monalisa3/fake_monalisa_"+"_"+str(i)+".png")
 
         self.population = self.initial_population_function(self.population_size)
         
-
+# run on rank and binary, increase offsprings
 monalisa = MonaLisa_EvolutionaryAlgorithm(
     initial_population_function = random_polygon_combinations,
     parent_selection_function = 'truncation',
     survivor_selection_function = 'truncation',
     cross_over_function = random_length_crossover,
     population_size = 100,
-    mutation_rate = 0.5,
+    mutation_rate = 0.8,
     num_offsprings=50
 )
-monalisa.run(num_generations=10000)
+monalisa.run(num_generations=1000000)
