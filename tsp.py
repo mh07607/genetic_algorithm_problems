@@ -103,7 +103,7 @@ def TSP_random_length_crossover(parent1: TSP_Path, parent2: TSP_Path):
 
 
 class TSP_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
-   def run(self, num_iterations: int=10, num_generations: int=1000):
+   def run(self, num_iterations: int=10, num_generations: int=1000) -> tuple:
       best_fitnesses = [[] for _ in range(num_iterations)]
       average_fitnesses = [[] for _ in range(num_iterations)]
       x_offset = num_generations // 20
@@ -133,7 +133,7 @@ class TSP_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
 #       mutation_rate = 0.5,
 #       num_offsprings=20
 #       )
-# tsp.run
+# tsp.run()
 
 
 
@@ -148,6 +148,9 @@ selection_pairs = [
                     ('rank', 'binary', 100, 0.5, 100),
                   ]
 
+num_generations = 1000
+num_iterations = 10
+x_offset = num_generations // 20
 
 
 for parent_selection, survivor_selection, population_size, mutation_rate, num_offsprings in selection_pairs:
@@ -161,10 +164,6 @@ for parent_selection, survivor_selection, population_size, mutation_rate, num_of
       mutation_rate = mutation_rate,
       num_offsprings=num_offsprings
   )
-
-  num_generations = 1000
-  num_iterations = 10
-  x_offset = num_generations // 20
 
   best_individual, best_fitnesses, average_fitnesses = tsp.run(num_generations=num_generations, num_iterations=num_iterations)
   best_fitnesses = np.array(best_fitnesses).T.tolist()
@@ -188,7 +187,10 @@ for parent_selection, survivor_selection, population_size, mutation_rate, num_of
           'Survivor selection: ' + survivor_selection + '\n' +
           'Population size: ' + str(population_size) + '\n' +
           'Mutation rate: ' + str(mutation_rate) + '\n' +
-          'Number of offsprings: ' + str(num_offsprings))
+          'Number of offsprings: ' + str(num_offsprings),
+          )
+  plt.text(0.5, 0.01, 'Population size: ' + str(population_size) + ', Mutation rate: ' + str(mutation_rate),
+             horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
   plt.legend()
 
   plt.savefig('data/tsp_analysis/'+parent_selection+'_'+survivor_selection+'.png')  # Save as PNG

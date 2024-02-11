@@ -50,7 +50,7 @@ class PolygonImage(Individual):
         fitness = image_difference(genome)
         super().__init__(genome, fitness)
 
-
+        # These values have been adapted from preliminary implementation by oysteinkrog
         self.mutation_rates = {"add_polygon": 0.0015,
                                "remove_polygon": 0.00067,
                                "move_polygon": 0.0015,
