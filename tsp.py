@@ -148,8 +148,8 @@ selection_pairs = [
                     ('rank', 'binary', 100, 0.5, 100),
                   ]
 
-num_generations = 1000
-num_iterations = 10
+num_generations = 400
+num_iterations = 1
 x_offset = num_generations // 20
 
 
@@ -182,30 +182,26 @@ for parent_selection, survivor_selection, population_size, mutation_rate, num_of
   plt.plot(x, y2, label='Average average fitness')
 
   plt.xlabel('Number of generations')
-  # plt.ylabel('Average average/best fitness values')
-  plt.title('Parent selection: ' + parent_selection + '\n' +
-          'Survivor selection: ' + survivor_selection + '\n' +
-          'Population size: ' + str(population_size) + '\n' +
-          'Mutation rate: ' + str(mutation_rate) + '\n' +
-          'Number of offsprings: ' + str(num_offsprings),
-          )
-  plt.text(0.5, 0.01, 'Population size: ' + str(population_size) + ', Mutation rate: ' + str(mutation_rate),
-             horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
+  plt.ylabel('Average average/best fitness values')
+  plt.title(parent_selection + ', ' +survivor_selection + ', ' +
+          str(population_size) + ', ' +
+          str(mutation_rate) + ', ' +
+          str(num_offsprings))
   plt.legend()
 
   plt.savefig('data/tsp_analysis/'+parent_selection+'_'+survivor_selection+'.png')  # Save as PNG
-
-  # Plot path of best individual in the last iteration
-  path_coordinates = [city_dict[city] for city in best_individual.genome]
-  path_coordinates.append(path_coordinates[0])
-  x_coords, y_coords = zip(*path_coordinates)
-  plt.figure()
-  plt.plot(x_coords, y_coords, marker='o', linestyle='-')
-  plt.xlabel('X-coordinate')
-  plt.ylabel('Y-coordinate')
-  plt.title('Parent selection: ' + parent_selection + '\n' +
-          'Survivor selection: ' + survivor_selection + '\n' +
-          'Population size: ' + str(population_size) + '\n' +
-          'Mutation rate: ' + str(mutation_rate) + '\n' +
-          'Number of offsprings: ' + str(num_offsprings))
-  plt.savefig('data/tsp_analysis/'+parent_selection+'_'+survivor_selection+'_path.png')
+  print(best_individual.genome)
+  # Plot path of best individual in the last iteration. Commented out because plots are not good
+  # path_coordinates = [city_dict[city] for city in best_individual.genome]
+  # path_coordinates.append(path_coordinates[0])
+  # x_coords, y_coords = zip(*path_coordinates)
+  # plt.figure()
+  # plt.plot(x_coords, y_coords, marker='o', linestyle='-')
+  # plt.xlabel('X-coordinate')
+  # plt.ylabel('Y-coordinate')
+  # plt.title('Parent selection: ' + parent_selection + '\n' +
+  #         'Survivor selection: ' + survivor_selection + '\n' +
+  #         'Population size: ' + str(population_size) + '\n' +
+  #         'Mutation rate: ' + str(mutation_rate) + '\n' +
+  #         'Number of offsprings: ' + str(num_offsprings))
+  # plt.savefig('data/tsp_analysis/'+parent_selection+'_'+survivor_selection+'_path.png')

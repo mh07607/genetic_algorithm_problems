@@ -7,6 +7,7 @@ from tqdm import tqdm
 from evolutionary_algorithm import Individual, EvolutionaryAlgorithm
 import matplotlib.pyplot as plt
 import plotly.figure_factory as ff
+import plotly.colors as plc
 
 ''' Loading dataset '''
 
@@ -42,8 +43,16 @@ def read_dataset(dataset_path: str) -> dict:
 datasets = read_dataset(dataset_path=dataset_path)
 current_dataset = datasets['abz7']
 
-
-
+# Deciding colors for 
+# colors = {}
+# for i in range(current_dataset["num_jobs"]):
+#     color = (np.random.uniform(), np.random.uniform(), np.random.uniform())
+#     colors["Job-"+str(i)] = color
+tasks = ['Job-'+str(i) for i in range(current_dataset["num_jobs"])]
+# Generate a list of distinct colors for the tasks
+pallette = plc.qualitative.Alphabet
+# Create a dictionary to map tasks to colors
+colors = dict(zip(tasks, pallette))
 
 
 
@@ -66,15 +75,16 @@ def calculate_schedule_time(job_schedule: list) -> float:
     jobs = copy.deepcopy(current_dataset["jobs"])
     num_jobs = len(jobs)
     while jobs != [None] * num_jobs:
-        for index, job_number in enumerate(job_schedule):
-            if not job_currently_in_any_machine(job_number, machines_dict):
-                machine_number = jobs[job_number][0][0]
-                if(machines_dict[machine_number] == None):
-                    machine_number, time_step = jobs[job_number].pop()
-                    machines_dict[machine_number] = [job_number, time_step]
-                    del job_schedule[index]
-                    if(jobs[job_number] == []):
-                        jobs[job_number] = None
+        if(None in machines_dict.values()):
+            for index, job_number in enumerate(job_schedule):
+                if not job_currently_in_any_machine(job_number, machines_dict):
+                    machine_number = jobs[job_number][0][0]
+                    if(machines_dict[machine_number] == None):
+                        machine_number, time_step = jobs[job_number].pop()
+                        machines_dict[machine_number] = [job_number, time_step]
+                        del job_schedule[index]
+                        if(jobs[job_number] == []):
+                            jobs[job_number] = None
 
         for i in machines_dict:
             if(machines_dict[i] != None):
@@ -123,16 +133,17 @@ class JobSchedule(Individual):
         jobs = copy.deepcopy(current_dataset["jobs"])
         num_jobs = len(jobs)
         while jobs != [None] * num_jobs:
-            for index, job_number in enumerate(job_schedule):
-                if not job_currently_in_any_machine(job_number, machines_dict):
-                    machine_number = jobs[job_number][0][0]
-                    if(machines_dict[machine_number] == None):
-                        machine_number, time_step = jobs[job_number].pop()
-                        # saving time_step twice so that I can use it to get time taken
-                        machines_dict[machine_number] = [job_number, time_step, time_step]
-                        del job_schedule[index]
-                        if(jobs[job_number] == []):
-                            jobs[job_number] = None
+            if(None in machines_dict.values()):
+                for index, job_number in enumerate(job_schedule):
+                    if not job_currently_in_any_machine(job_number, machines_dict):
+                        machine_number = jobs[job_number][0][0]
+                        if(machines_dict[machine_number] == None):
+                            machine_number, time_step = jobs[job_number].pop()
+                            # saving time_step twice so that I can use it to get time taken
+                            machines_dict[machine_number] = [job_number, time_step, time_step]
+                            del job_schedule[index]
+                            if(jobs[job_number] == []):
+                                jobs[job_number] = None
 
             for i in machines_dict:
                 if(machines_dict[i] != None):
@@ -143,20 +154,18 @@ class JobSchedule(Individual):
                                   Start=total_time-machines_dict[i][2],
                                   Finish=total_time, 
                                   Resource="Job-"+str(machines_dict[i][0]))
-                        )
+                                )
                         machines_dict[i] = None
             
             total_time += 1
         
         ''' Plotting '''
-        colors = {}
-        for i in range(num_jobs):
-            color = (np.random.uniform(), np.random.uniform(), np.random.uniform())
-            colors["Job-"+str(i)] = color
-
-        fig = ff.create_gantt(machines_timeline, colors=colors, index_col='Resource', show_colorbar=True,
+        # we have defined colors above
+        fig = ff.create_gantt(sorted(machines_timeline, key=lambda x: x["Task"]), 
+                              colors=colors, index_col='Resource', show_colorbar=True,
                       group_tasks=True, bar_width=0.1)
         fig.update_layout(xaxis_type='linear')
+        fig.update_layout(height=800)
         fig.write_image(name)
 
 
@@ -217,7 +226,7 @@ class JSS_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
       for j in range(num_iterations):
         for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
           self.run_generation()
-          if(i % x_offset    == 0):
+          if(i % x_offset == 0):
             best_individual, average_fitness = self.get_average_and_best_individual()
             print("\nAverage fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
             # print(best_individual.genome)
@@ -251,8 +260,8 @@ selection_pairs = [
                     ('rank', 'binary', 100, 0.5, 100),
                   ]
 
-num_generations = 10
-num_iterations = 1
+num_generations = 500
+num_iterations = 5
 x_offset = num_generations // 5
 
 for parent_selection, survivor_selection, population_size, mutation_rate, num_offsprings in selection_pairs:
@@ -284,12 +293,11 @@ for parent_selection, survivor_selection, population_size, mutation_rate, num_of
   plt.plot(x, y2, label='Average average fitness')
 
   plt.xlabel('Number of generations')
-  # plt.ylabel('Average average/best fitness values')
-  plt.title('Parent selection: ' + parent_selection + '\n' +
-          'Survivor selection: ' + survivor_selection + '\n' +
-          'Population size: ' + str(population_size) + '\n' +
-          'Mutation rate: ' + str(mutation_rate) + '\n' +
-          'Number of offsprings: ' + str(num_offsprings))
+  plt.ylabel('Average average/best fitness values')
+  plt.title(parent_selection + ', ' +survivor_selection + ', ' +
+          str(population_size) + ', ' +
+          str(mutation_rate) + ', ' +
+          str(num_offsprings))
   plt.legend()
   plt.tight_layout()
   plt.savefig('data/jss_analysis/'+parent_selection+'_'+survivor_selection+'.png')  # Save as PNG
@@ -297,3 +305,4 @@ for parent_selection, survivor_selection, population_size, mutation_rate, num_of
   # Plot job schedule of best individual in the last iteration
   best_individual.save_as_gantt_chart('data/jss_analysis/'+parent_selection
                                       +'_'+survivor_selection+'_gantt_chart.png')
+  print(best_individual.genome)
