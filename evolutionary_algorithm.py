@@ -69,7 +69,7 @@ class EvolutionaryAlgorithm():
 
   def rank_selection(self, num_selections: int) -> List[Individual]:
     self.population.sort(key=lambda individual: individual.fitness, reverse=True)
-    ranks = np.arange(1, self.population_size + 1)
+    ranks = np.arange(1, len(self.population) + 1)
     total_rank = np.sum(ranks)
     selection_probs = ranks / total_rank
     selected_indices = np.random.choice(range(len(self.population)), size=num_selections, replace=True, p=selection_probs)

@@ -50,7 +50,7 @@ class PolygonImage(Individual):
         fitness = image_difference(genome)
         super().__init__(genome, fitness)
 
-
+        # These values have been adapted from preliminary implementation by oysteinkrog
         self.mutation_rates = {"add_polygon": 0.0015,
                                "remove_polygon": 0.00067,
                                "move_polygon": 0.0015,
@@ -135,7 +135,7 @@ class PolygonImage(Individual):
                 x = clamp(vertices[i][0] + np.random.uniform(self.mutation_ranges["small_point_change"]), 0, width)
                 y = clamp(vertices[i][1] + np.random.uniform(self.mutation_ranges["small_point_change"]), 0, height)
                 vertices[i] = (x, y)
-                
+
         return vertices
 
 
@@ -237,7 +237,7 @@ class MonaLisa_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
 monalisa = MonaLisa_EvolutionaryAlgorithm(
     initial_population_function = random_polygon_combinations,
     parent_selection_function = 'truncation',
-    survivor_selection_function = 'random',
+    survivor_selection_function = 'truncation',
     cross_over_function = random_length_crossover,
     population_size = 100,
     mutation_rate = 0.8,
